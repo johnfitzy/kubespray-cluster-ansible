@@ -1,0 +1,30 @@
+.idea
+.vscode
+.vagrant
+
+# Vagrant data disks (raw, reserved for future MinIO/DirectPV)
+.vagrant-disks/
+*.vdi
+
+# Python venv for Kubespray
+venv/
+
+# Ansible fact cache
+/tmp/ansible_facts_cache
+
+# Kubespray writes kubeconfig + credentials here after a run
+inventory/*/artifacts/
+inventory/*/credentials/
+
+# Galaxy-installed role (pulled via roles/requirements.yml)
+roles/geerlingguy.security
+
+# Galaxy-installed collections (pulled via collections/requirements.yml)
+collections/ansible_collections/
+
+# Ansible runtime cache (collections/roles/modules resolved at play time)
+.ansible/
+*.retry
+
+working_notes.md
+notes.md

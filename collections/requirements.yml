@@ -1,0 +1,6 @@
+---
+# Collections required by the pre-kubespray roles (base, geerlingguy.security).
+# Kubespray manages its own dependencies via kubespray/requirements.txt.
+collections:
+  - name: ansible.posix
+  - name: community.general

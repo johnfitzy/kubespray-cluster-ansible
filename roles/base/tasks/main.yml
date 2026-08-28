@@ -1,0 +1,47 @@
+---
+
+- name: Update package repos
+  apt:
+    update_cache: yes
+
+- name: Developer group
+  group:
+    name: developer
+    state: present
+
+- name: Create User Logins
+  user:
+    name: "{{ item.username }}"
+    comment: "{{ item.name }}"
+    groups: developer
+    state: present
+    shell: /bin/bash
+    append: yes
+  with_items: "{{ user_config }}"
+  changed_when: no
+
+
+- name: Create k8s-admin group
+  group:
+    name: k8s-admin
+    state: present
+
+- name: Add users to k8s-admin group
+  user:
+    name: "{{ item }}"
+    groups: k8s-admin
+  with_items: "{{ k8s_admins }}"
+  changed_when: no
+
+- name: Make Vagrant login shell bash
+  user:
+    name: vagrant
+    shell: /bin/bash
+  when: '"local_vagrant" in inventory_dir'
+
+- name: Add SSH key authorization
+  ansible.posix.authorized_key:
+    user: "{{ item.username }}"
+    state: present
+    key: "{{ item.sshkey }}"
+  with_items: "{{ user_config }}"

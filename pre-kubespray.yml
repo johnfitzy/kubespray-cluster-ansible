@@ -1,0 +1,13 @@
+---
+# Runs before Kubespray: create user accounts / SSH keys and harden the hosts.
+- name: Base setup and host hardening
+  hosts: all
+  become: true
+  roles:
+    - role: base
+      tags:
+        - base
+    - role: geerlingguy.security
+      tags:
+        - base
+        - security

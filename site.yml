@@ -1,0 +1,13 @@
+---
+# Full provisioning flow for the local Vagrant lab:
+#   1. pre-kubespray : base users/SSH + host hardening
+#   2. kubespray     : deploy the Kubernetes cluster (Calico CNI, kube-proxy IPVS)
+#
+# Storage is intentionally NOT installed here. The extra raw disks are left
+# untouched for a future MinIO + DirectPV playbook.
+
+- name: Pre-Kubespray base setup
+  ansible.builtin.import_playbook: pre-kubespray.yml
+#
+#- name: Deploy Kubernetes with Kubespray
+#  ansible.builtin.import_playbook: kubespray/cluster.yml
