@@ -122,7 +122,7 @@ against all of them.
 
 ```shell
 source venv/bin/activate
-ansible-playbook -i inventory/local_vagrant site.yml --become
+ansible-playbook -b -e "ansible_user=john" -e ansible_ssh_private_key_file=/home/john/.ssh/kubespray-ansible-cluster -i inventory/local_vagrant/ site.yml
 ```
 
 ### Access the cluster

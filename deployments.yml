@@ -1,0 +1,17 @@
+---
+- name: gather facts
+  hosts: all
+
+- hosts: kube_control_plane
+  become: true
+
+  roles:
+    - role: controlplane
+      tags: always
+
+# - hosts: kube_control_plane[0]
+#   become: true
+
+#   roles:
+#     - role: k8scommon
+#       tags: always

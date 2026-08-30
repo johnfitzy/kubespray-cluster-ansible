@@ -1,0 +1,29 @@
+---
+
+- name: Create k8sadmin group
+  group:
+    name: k8sadmin
+    state: present
+
+- name: Add users to k8sadmin group
+  user:
+    name: "{{ item }}"
+    groups: k8sadmin
+  with_items: "{{ k8s_admins }}"
+  changed_when: no
+
+- name: Add kubeconfig environment variable
+  lineinfile:
+    path: "/home/{{ item.username }}/.bashrc"
+    state: present
+    regexp: '^export KUBECONFIG='
+    line: "export KUBECONFIG={{ kubeconfig_path }}"
+  with_items: "{{ user_config }}"
+
+- name: Add kubectl auto completion
+  lineinfile:
+    path: "/home/{{ item.username }}/.bashrc"
+    state: present
+    regexp: '^source <(kubectl completion bash)'
+    line: "source <(kubectl completion bash)"
+  with_items: "{{ user_config }}"

@@ -20,19 +20,6 @@
   with_items: "{{ user_config }}"
   changed_when: no
 
-
-- name: Create k8s-admin group
-  group:
-    name: k8s-admin
-    state: present
-
-- name: Add users to k8s-admin group
-  user:
-    name: "{{ item }}"
-    groups: k8s-admin
-  with_items: "{{ k8s_admins }}"
-  changed_when: no
-
 - name: Make Vagrant login shell bash
   user:
     name: vagrant
@@ -45,3 +32,20 @@
     state: present
     key: "{{ item.sshkey }}"
   with_items: "{{ user_config }}"
+
+
+- name: Install basic dev util packages
+  apt:
+    pkg:
+      - vim
+      - htop
+      - jq
+      - net-tools
+      - unzip
+      - cifs-utils
+      - mysql-client
+    state: latest
+    update_cache: yes
+  register: apt_res
+  retries: 5
+  until: apt_res is success

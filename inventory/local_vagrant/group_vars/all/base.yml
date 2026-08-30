@@ -4,14 +4,13 @@ ansible_user: vagrant
 ansible_ssh_private_key_file: ~/.vagrant.d/insecure_private_key
 ansible_ssh_extra_args: "-o IdentitiesOnly=yes"
 
+kubeconfig_path: /etc/kubernetes/admin.conf
+
 # Create users
 user_config:
   - username: john
     name: "John Fitzgerald"
     sshkey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILaFq6ed2AcVMWKb2HcpaDhMazbLqC/vx6MWoFb7iQWX"
-
-k8s_admins:
-  - john
 
 # geerlingguy.security
 security_sudoers_passwordless:
