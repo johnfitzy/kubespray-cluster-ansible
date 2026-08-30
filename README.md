@@ -7,9 +7,8 @@ Build a Kubernetes cluster on VMs (and, later, bare metal) using
 
 The cluster is intentionally a **base environment only**: Kubernetes with the
 Calico CNI (kube-proxy in IPVS mode) and nothing else of consequence. Each node
-is given two extra raw 10GB disks that are **left untouched** — they are
-reserved for a future, separate MinIO + [DirectPV](https://min.io/directpv)
-playbook, which will discover and format the raw devices itself.
+is given two extra raw 10GB disks that are **left untouched**; they are
+reserved for a future, separate MinIO.
 
 ### Environments
 
