@@ -5,9 +5,13 @@
   become: true
   roles:
     - role: base
-      tags:
-        - base
+      tags: [base]
     - role: geerlingguy.security
-      tags:
-        - base
-        - security
+      tags: [base, security]
+
+- name: Storage Prep
+  hosts: storage_nodes
+  become: true
+  roles:
+    - role: storage_prep
+      tags: [storage]

@@ -12,7 +12,7 @@ reserved for a future, separate MinIO.
 
 ### Environments
 
-- **Vagrant/VirtualBox** (`inventory/local_vagrant/`) — 3x Ubuntu 24.04 VMs
+- **Vagrant/VirtualBox** (`inventory/local_vagrant/`) — 4x Ubuntu 24.04 VMs (1 control-plane + 3 workers)
 - **Home lab** (coming soon) — 3x Lenovo m910q
 - Future: cheap cloud VMs
 
@@ -22,11 +22,13 @@ Low-resource laptop demo — **no HA**:
 
 | Node   | IP             | Roles                                |
 |--------|----------------|--------------------------------------|
-| knode1 | 192.168.56.111 | control-plane + etcd + worker        |
-| knode2 | 192.168.56.112 | worker                               |
-| knode3 | 192.168.56.113 | worker                               |
+| cp1  | 192.168.56.111 | control-plane + etcd (only)          |
+| kn1  | 192.168.56.112 | worker                               |
+| kn2  | 192.168.56.113 | worker                               |
+| kn3  | 192.168.56.114 | worker                               |
 
-All three are workers, so future storage workloads get 3 nodes × 2 disks.
+cp1 is control-plane only (tainted). The three workers back future storage
+workloads: 3 nodes × 2 disks.
 
 ---
 
@@ -97,9 +99,10 @@ ansible-galaxy install -r roles/requirements.yml
 ### 4. (Optional) hosts file
 
 ```shell
-192.168.56.111 knode1
-192.168.56.112 knode2
-192.168.56.113 knode3
+192.168.56.111 cp1
+192.168.56.112 kn1
+192.168.56.113 kn2
+192.168.56.114 kn3
 ```
 
 ---
@@ -136,7 +139,7 @@ kubectl get nodes -o wide
 ### Verify the raw disks (for the future MinIO/DirectPV work)
 
 ```shell
-vagrant ssh knode1 -c "lsblk -dn -o NAME,SIZE,TYPE,FSTYPE"
+vagrant ssh kn1 -c "lsblk -dn -o NAME,SIZE,TYPE,FSTYPE"   # any worker
 # expect sdb / sdc at 10G with no partitions and no filesystem
 ```
 

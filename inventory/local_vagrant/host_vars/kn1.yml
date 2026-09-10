@@ -1,0 +1,9 @@
+---
+ansible_host: 192.168.56.112
+ansible_user: vagrant
+hostname_short: kn1
+
+block_devs:
+  - /dev/sdb
+  - /dev/sdc
+

@@ -1,0 +1,15 @@
+---
+
+- name: Create ext4 Filesystem on Block Devices
+  community.general.filesystem:
+    fstype: ext4
+    dev: "{{ item }}"
+  with_items: "{{ block_devs }}"
+
+- name: Mount points for dbs
+  ansible.posix.mount:
+    path: "/blockdev{{ item }}"
+    src: "{{ item}}"
+    fstype: ext4
+    state: mounted
+  with_items: "{{ block_devs }}"

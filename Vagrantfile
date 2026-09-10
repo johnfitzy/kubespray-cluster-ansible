@@ -1,10 +1,11 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 #
-# Local Kubespray lab: 3x Ubuntu 24.04 (bento) nodes.
-#   knode1 -> control-plane + etcd + worker (low-resource lab, no HA)
-#   knode2 -> worker
-#   knode3 -> worker
+# Local Kubespray lab: 4x Ubuntu 24.04 (bento) nodes.
+#   cp1 -> control-plane + etcd only (low-resource lab, no HA)
+#   kn1 -> worker
+#   kn2 -> worker
+#   kn3 -> worker
 #
 # Box: bento/ubuntu-24.04 -- traditional packer box with VirtualBox Guest
 # Additions baked in, so the default /vagrant synced folder (this project dir
@@ -17,7 +18,7 @@
 # devices itself. In the guest they show up as /dev/sdb and /dev/sdc.
 #
 # Provisioning: `vagrant up` (or `vagrant provision`) runs site.yml once against
-# all three nodes, after the last VM boots. Ansible runs on the HOST, so the
+# all nodes, after the last VM boots. Ansible runs on the HOST, so the
 # project venv (ansible-core 2.18 / Kubespray pin) must be on PATH:
 #   source venv/bin/activate && vagrant provision
 # The playbook still works standalone too:
@@ -26,9 +27,10 @@
 require 'fileutils'
 
 boxes = [
-  { name: "knode1", hostname: "knode1.local", ip: "192.168.56.111", memory: 4096, cpus: 2 },
-  { name: "knode2", hostname: "knode2.local", ip: "192.168.56.112", memory: 3072, cpus: 2 },
-  { name: "knode3", hostname: "knode3.local", ip: "192.168.56.113", memory: 3072, cpus: 2 }
+  { name: "cp1", hostname: "cp1.local", ip: "192.168.56.111", memory: 2048, cpus: 2 },
+  { name: "kn1", hostname: "kn1.local", ip: "192.168.56.112", memory: 4096, cpus: 4 },
+  { name: "kn2", hostname: "kn2.local", ip: "192.168.56.113", memory: 4096, cpus: 4 },
+  { name: "kn3", hostname: "kn3.local", ip: "192.168.56.114", memory: 4096, cpus: 4 }
 ]
 
 box_image  = "bento/ubuntu-24.04"
@@ -92,19 +94,27 @@ Vagrant.configure("2") do |config|
       end
 
       # Attach the Ansible run to the LAST node so it fires once, after every
-      # VM is up, against the whole inventory. `vagrant provision knode1/knode2`
+      # VM is up, against the whole inventory. `vagrant provision cp1/kn1`
       # is therefore a no-op -- use `vagrant provision` (or `vagrant provision
-      # knode3`) to (re-)run site.yml.
+      # kn3`) to (re-)run site.yml.
       next unless index == boxes.size - 1
+
+      # Install the Galaxy role(s) via a host trigger, NOT via Vagrant's
+      # ansible.galaxy_* options. Those options export ANSIBLE_ROLES_PATH,
+      # which overrides `roles_path` in ansible.cfg and hides the vendored
+      # Kubespray roles (the run then fails on 'dynamic_groups' et al.).
+      # Letting ansible.cfg own roles_path keeps ./roles + ./kubespray/roles
+      # both on the search path.
+      node.trigger.before :provision do |t|
+        t.name = "ansible-galaxy install"
+        t.run  = { inline: "ansible-galaxy install -r roles/requirements.yml -p roles" }
+      end
 
       node.vm.provision "ansible" do |ansible|
         ansible.compatibility_mode = "2.0"
         ansible.playbook           = "site.yml"
         ansible.inventory_path     = "inventory/local_vagrant"
         ansible.limit              = "all"
-        ansible.galaxy_role_file   = "roles/requirements.yml"
-        ansible.galaxy_roles_path  = "roles"
-        ansible.galaxy_command     = "ansible-galaxy install -r %{role_file} -p %{roles_path}"
         ansible.raw_arguments      = ["--private-key=#{insecure_key}"] if insecure_key
       end
     end
