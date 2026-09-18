@@ -1,15 +1,41 @@
 ---
 
-- name: Create ext4 Filesystem on Block Devices
+- name: Create xfs Filesystem on Block Devices
   community.general.filesystem:
-    fstype: ext4
+    fstype: xfs
     dev: "{{ item }}"
   with_items: "{{ block_devs }}"
 
 - name: Mount points for dbs
   ansible.posix.mount:
     path: "/blockdev{{ item }}"
-    src: "{{ item}}"
-    fstype: ext4
+    src: "{{ item }}"
+    fstype: xfs
     state: mounted
+  with_items: "{{ block_devs }}"
+
+- name: Disable XFS retry-on-error (EIO/ENOSPC/default) per MinIO recommendation
+  ansible.builtin.shell: |
+    echo 0 > /sys/fs/xfs/{{ item.0 | basename }}/error/metadata/{{ item.1 }}/max_retries
+  args:
+    executable: /bin/sh
+  changed_when: false
+  loop: "{{ block_devs | product(xfs_error_classes) | list }}"
+  loop_control:
+    label: "{{ item.0 }} {{ item.1 }}"
+
+- name: Deploy udev rule to reapply XFS max_retries=0 on every (re)mount
+  ansible.builtin.copy:
+    src: 60-xfs-max-retries.rules
+    dest: /etc/udev/rules.d/60-xfs-max-retries.rules
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload udev rules
+
+- name: Chown mount points for Silo/MinIO (pods run as uid/gid {{ silo_pod_uid }})
+  ansible.builtin.file:
+    path: "/blockdev{{ item }}"
+    owner: "{{ silo_pod_uid }}"
+    group: "{{ silo_pod_gid }}"
   with_items: "{{ block_devs }}"

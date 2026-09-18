@@ -1,0 +1,1 @@
+ACTION=="add|change", SUBSYSTEM=="xfs", RUN+="/bin/sh -c 'echo 0 > /sys%p/error/metadata/EIO/max_retries; echo 0 > /sys%p/error/metadata/ENOSPC/max_retries; echo 0 > /sys%p/error/metadata/default/max_retries'"

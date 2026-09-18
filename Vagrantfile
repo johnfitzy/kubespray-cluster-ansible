@@ -67,6 +67,9 @@ Vagrant.configure("2") do |config|
         vb.name   = box[:name]
         vb.memory = box[:memory]
         vb.cpus   = box[:cpus]
+        # Faster NICs
+        vb.customize ["modifyvm", :id, "--nictype1", "virtio"]
+        vb.customize ["modifyvm", :id, "--nictype2", "virtio"]
 
         # Create + attach the raw data disks once. Guarded so provider
         # customizations (replayed on every `vagrant up` / `reload`) don't

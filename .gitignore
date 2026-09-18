@@ -12,6 +12,9 @@ venv/
 # Ansible fact cache
 /tmp/ansible_facts_cache
 
+# roles/silo clones the pgsty/silo helm chart here
+/tmp/silo/
+
 # Kubespray writes kubeconfig + credentials here after a run
 inventory/*/artifacts/
 inventory/*/credentials/

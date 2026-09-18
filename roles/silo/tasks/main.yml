@@ -1,0 +1,75 @@
+---
+# roles/storage_prep chowns the mount points to the Silo container's
+# uid/gid, run via pre-kubespray.yml against storage_nodes. This role only
+# covers the cluster-side deploy: StorageClass, static PVs, and the helm
+# release.
+
+- name: Verify helm is installed on the control node
+  ansible.builtin.command: helm version --short
+  register: silo_helm_check
+  changed_when: false
+  failed_when: silo_helm_check.rc != 0
+
+- name: Apply local-storage StorageClass
+  kubernetes.core.k8s:
+    kubeconfig: "{{ silo_kubeconfig }}"
+    state: present
+    definition:
+      apiVersion: storage.k8s.io/v1
+      kind: StorageClass
+      metadata:
+        name: "{{ silo_storage_class }}"
+      provisioner: kubernetes.io/no-provisioner
+      volumeBindingMode: WaitForFirstConsumer
+
+- name: Create static PersistentVolumes for each storage node / disk
+  kubernetes.core.k8s:
+    kubeconfig: "{{ silo_kubeconfig }}"
+    state: present
+    definition:
+      apiVersion: v1
+      kind: PersistentVolume
+      metadata:
+        name: "silo-{{ item.0 }}-{{ item.1 | basename }}"
+      spec:
+        capacity:
+          storage: "{{ silo_pv_size }}"
+        volumeMode: Filesystem
+        accessModes: ["ReadWriteOnce"]
+        persistentVolumeReclaimPolicy: Retain
+        storageClassName: "{{ silo_storage_class }}"
+        local:
+          path: "{{ silo_mount_base }}{{ item.1 }}"
+        nodeAffinity:
+          required:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values: ["{{ item.0 }}"]
+  loop: "{{ silo_storage_nodes | product(silo_block_devs) | list }}"
+  loop_control:
+    label: "silo-{{ item.0 }}-{{ item.1 | basename }}"
+
+- name: Shallow-clone the Silo helm chart at the pinned release tag
+  ansible.builtin.git:
+    repo: "{{ silo_chart_repo }}"
+    dest: "{{ silo_clone_dest }}"
+    version: "{{ silo_chart_tag }}"
+    depth: 1
+
+- name: Deploy Silo helm release
+  kubernetes.core.helm:
+    kubeconfig: "{{ silo_kubeconfig }}"
+    release_name: "{{ silo_release_name }}"
+    release_namespace: "{{ silo_namespace }}"
+    create_namespace: true
+    chart_ref: "{{ silo_clone_dest }}/{{ silo_chart_subpath }}"
+    release_values: "{{ silo_values }}"
+    wait: true
+
+- name: Root credentials
+  ansible.builtin.debug:
+    msg: >-
+      rootUser={{ silo_root_user }}, rootPassword={{ silo_root_password }}
+      -- console: kubectl -n {{ silo_namespace }} port-forward svc/{{ silo_release_name }}-console 9001:9001

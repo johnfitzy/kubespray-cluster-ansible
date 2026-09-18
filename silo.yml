@@ -1,0 +1,22 @@
+---
+# Deploys Silo (pgsty/silo, a rebranded MinIO fork) onto the cluster:
+# StorageClass, static local PVs over kn1-kn3's raw disks, and the helm
+# release. roles/storage_prep handles node-side prep (xfs mounts + chown to
+# the container's uid/gid) as part of pre-kubespray.yml/site.yml -- run
+# that first.
+#
+# Requires: helm on the control node, and the admin kubeconfig already
+# written to inventory/local_vagrant/artifacts/admin.conf by kubespray
+# (kubeconfig_localhost: true).
+
+- name: Deploy Silo (MinIO fork) to the cluster
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  # ansible.cfg sets become=True globally for the Kubespray plays. This play
+  # targets the control node itself, not a cluster node, and doesn't need
+  # (or have) privilege escalation set up.
+  become: false
+  roles:
+    - role: silo
+      tags: [silo]

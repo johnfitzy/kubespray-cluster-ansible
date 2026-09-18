@@ -1,0 +1,4 @@
+# Extra Python deps for the silo role's kubernetes.core.k8s / helm modules.
+# Install into the same venv as kubespray/requirements.txt:
+#   source venv/bin/activate && pip install -r requirements-silo.txt
+kubernetes==36.0.3

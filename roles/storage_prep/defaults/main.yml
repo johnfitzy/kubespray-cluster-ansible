@@ -1,0 +1,9 @@
+---
+xfs_error_classes:
+  - EIO
+  - ENOSPC
+  - default
+
+# uid/gid the Silo (pgsty/silo, MinIO fork) container runs as.
+silo_pod_uid: 1000
+silo_pod_gid: 1000

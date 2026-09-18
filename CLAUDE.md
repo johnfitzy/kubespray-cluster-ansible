@@ -11,8 +11,8 @@ playbook is **MinIO + DirectPV**, which will consume the raw data disks.
 
 ## Environments
 
-- **Vagrant** (`inventory/local_vagrant/`): 3x Ubuntu 24.04 VMs on 192.168.56.0/24
-  (knode1/knode2/knode3). Low-resource laptop lab — **no HA**. Box is
+- **Vagrant** (`inventory/local_vagrant/`): 4x Ubuntu 24.04 VMs on 192.168.56.0/24
+  (cp1, kn1..kn3). Low-resource laptop lab — **no HA**. Box is
   `bento/ubuntu-24.04` (packer box w/ Guest Additions); the project dir is
   synced to `/vagrant` in each guest. NIC names are `eth0` (NAT) / `eth1`
   (192.168.56.x host-only). VirtualBox provider.
@@ -20,13 +20,19 @@ playbook is **MinIO + DirectPV**, which will consume the raw data disks.
 
 ## Topology (local_vagrant)
 
-| Node   | IP             | Kubespray groups                         |
-|--------|----------------|------------------------------------------|
-| knode1 | 192.168.56.111 | kube_control_plane, etcd, kube_node      |
-| knode2 | 192.168.56.112 | kube_node                                |
-| knode3 | 192.168.56.113 | kube_node                                |
+| Node   | IP             | Kubespray groups                    | Custom groups   |
+|--------|----------------|-------------------------------------|-----------------|
+| cp1  | 192.168.56.111 | kube_control_plane, etcd              |                 |
+| kn1  | 192.168.56.112 | kube_node                            | storage_nodes   |
+| kn2  | 192.168.56.113 | kube_node                            | storage_nodes   |
+| kn3  | 192.168.56.114 | kube_node                            | storage_nodes   |
 
-Single control-plane + etcd (knode1), which is also a worker. All three are
+Single control-plane + etcd (cp1), **control-plane only** — not in
+`kube_node`, so it keeps the `node-role.kubernetes.io/control-plane:NoSchedule`
+taint and runs no workloads. kn1/kn2/kn3 are the workers.
+
+`storage_nodes` is a project-local group (ignored by Kubespray) that the
+`storage_prep` play in `pre-kubespray.yml` targets. Currently identical to
 `kube_node`.
 
 ## Playbook Flow
@@ -100,8 +106,8 @@ Seeded from the v2.31.0 sample, with overrides:
 
 ## Known TODOs
 
-- knode1 verified booting on `bento/ubuntu-24.04` (raw disks land on `sdb`/`sdc`
-  as expected, `/vagrant` synced). Still need to bring up knode2/knode3 and run
+- cp1 verified booting on `bento/ubuntu-24.04` (raw disks land on `sdb`/`sdc`
+  as expected, `/vagrant` synced). Still need to bring up kn1..kn3 and run
   the cluster end-to-end.
 - Home lab inventory not yet created.
 - Future: separate MinIO + DirectPV playbook consuming sdb/sdc.

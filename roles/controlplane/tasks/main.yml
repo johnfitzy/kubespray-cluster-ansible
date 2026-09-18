@@ -12,6 +12,12 @@
   with_items: "{{ k8s_admins }}"
   changed_when: no
 
+- name: Grant k8sadmin group read access to admin kubeconfig
+  ansible.builtin.file:
+    path: "{{ kubeconfig_path }}"
+    group: k8sadmin
+    mode: "0640"
+
 - name: Add kubeconfig environment variable
   lineinfile:
     path: "/home/{{ item.username }}/.bashrc"

@@ -1,0 +1,21 @@
+---
+# Env-specific values for roles/silo: disks, memory, credentials.
+# Everything else is in roles/silo/defaults/main.yml.
+
+silo_block_devs:
+  - /dev/sdb
+  - /dev/sdc
+
+# Below the ~9.3G actually free on each vagrant data disk.
+silo_pv_size: 9Gi
+
+# Chart default is 16Gi/pod -- laptop lab nodes don't have that.
+silo_pod_memory_request: 2Gi
+
+silo_root_user: admin
+silo_root_password: password
+
+silo_users:
+  - accessKey: john
+    secretKey: password
+    policy: consoleAdmin

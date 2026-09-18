@@ -1,0 +1,45 @@
+---
+silo_namespace: silo
+silo_release_name: silo
+
+silo_chart_repo: https://github.com/pgsty/silo.git
+silo_chart_tag: RELEASE.2026-09-16T00-00-00Z
+silo_chart_subpath: helm/silo
+silo_clone_dest: "{{ playbook_dir }}/tmp/silo"
+
+# localhost isn't a real inventory host, so inventory_dir isn't set for it.
+# Pull it from a host that has it instead.
+silo_inventory_dir: "{{ hostvars[groups['kube_control_plane'][0]]['inventory_dir'] }}"
+
+silo_kubeconfig: "{{ silo_inventory_dir }}/artifacts/admin.conf"
+
+silo_storage_class: local-storage
+silo_storage_nodes: "{{ groups['storage_nodes'] }}"
+
+# silo_block_devs, silo_pv_size, silo_pod_memory_request, silo_root_user,
+# silo_root_password, and silo_users are hardware/env-specific and are set
+# per inventory, e.g. inventory/local_vagrant/group_vars/all/silo.yml.
+
+silo_values:
+  mode: distributed
+  replicas: "{{ silo_storage_nodes | length }}"
+  drivesPerNode: "{{ silo_block_devs | length }}"
+  pools: 1
+  persistence:
+    enabled: true
+    storageClass: "{{ silo_storage_class }}"
+    accessMode: ReadWriteOnce
+    size: "{{ silo_pv_size }}"
+  resources:
+    requests:
+      memory: "{{ silo_pod_memory_request }}"
+  rootUser: "{{ silo_root_user }}"
+  rootPassword: "{{ silo_root_password }}"
+  users: "{{ silo_users }}"
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: silo
+          topologyKey: kubernetes.io/hostname

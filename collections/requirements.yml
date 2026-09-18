@@ -1,6 +1,9 @@
 ---
-# Collections required by the pre-kubespray roles (base, geerlingguy.security).
+# Collections required by the pre-kubespray roles (base, geerlingguy.security)
+# and the silo role (kubernetes.core.k8s / kubernetes.core.helm).
 # Kubespray manages its own dependencies via kubespray/requirements.txt.
 collections:
   - name: ansible.posix
   - name: community.general
+  - name: kubernetes.core
+    version: ">=6.6.0"

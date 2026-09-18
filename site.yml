@@ -12,5 +12,8 @@
 - name: Deploy Kubernetes with Kubespray
   ansible.builtin.import_playbook: kubespray/cluster.yml
 
-# - name: Deploy Applications
-#   ansible.builtin.import_playbook: deployments.yml
+- name: Deploy Applications
+  ansible.builtin.import_playbook: deployments.yml
+
+- name: Deploy Silo
+  ansible.builtin.import_playbook: deployments.yml
